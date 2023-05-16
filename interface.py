@@ -4,6 +4,7 @@ import serial
 import moduleMesure as module
 import time
 import datetime
+import connexionBD as bd
 
 serialPort = serial.Serial("COM3")
 
@@ -42,6 +43,16 @@ class Interface(tk.Tk):
         objetMesure = module.Mesure(dateStr, text, mesure)
         #print(objetMesure)
         listBoxMesures.insert(tk.END, objetMesure)
+        
+        bd.connexionDB()
+        
+        if bd.verifierExisteTable("DISTANCE") == False:
+            bd.creationBaseDeDonnées()
+            
+        bd.ajouterMesure(dateStr, text, mesure)
+        
+        bd.fermetureDB()
+        
     
     def __init__(self):
         super().__init__()
