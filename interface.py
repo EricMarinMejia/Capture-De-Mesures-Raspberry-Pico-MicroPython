@@ -84,8 +84,6 @@ class Interface(tk.Tk):
         boutonStop.pack(fill=tk.BOTH, expand=True, side=tk.RIGHT)
         
     
-
-    
 if __name__ == "__main__":
     app = Interface()
     app.mainloop()
