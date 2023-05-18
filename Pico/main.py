@@ -10,7 +10,7 @@ from myservo import Servo
 i2c = I2C(0, sda=Pin(0), scl=Pin(1), freq=400000)
 i2c_add = i2c.scan()[0]
 
-ledVert = Pin(15, Pin.OUT)
+ledVert = Pin(13, Pin.OUT)
 ledRouge = Pin(16, Pin.OUT)
 
 #distance
@@ -31,6 +31,7 @@ yAxis = ADC(Pin(27))
 buttonJoystick = Pin(26,Pin.IN, Pin.PULL_UP)
 
 terminateThread = False
+typeCapture = ""
 
 def lectureDistance():
 	trigger.value(1)
@@ -50,24 +51,34 @@ def lectureDistance():
  
 	return distance
 
-def afficherMesureLCD(distance):
+def afficherMesureLCD(typeMesure, valeur):
     ecranLCD.clear()
-    ecranLCD.putstr("Objet detecte a:\n" + str(distance) + "cm")
+    
+    if typeMesure == "distance":
+        ecranLCD.putstr("Objet detecte a:\n" + str(valeur) + "cm")
+    else:
+        ecranLCD.putstr("Angle actuel:\n" + str(valeur) + " degrees")
+        
     time.sleep(2)
     ecranLCD.clear()
     ecranLCD.putstr("Appuyer pour\nafficher mesure")
+    
 
 def demarrerSysteme():
-    global terminateThread, distance
+    global terminateThread, distance, typeCapture
     
     ledVert.on()
     ledRouge.off()
     
-    ecranLCD.putstr("DEMARRAGE")
+    if typeCapture == "distance":
+        ecranLCD.putstr("DEMARRAGE\nDISTANCE")
+    elif typeCapture == "angle":
+        ecranLCD.putstr("DEMARRAGE\nANGLE")
     time.sleep(2)
     ecranLCD.clear()
     ecranLCD.putstr("Appuyer pour\nafficher mesure")
     
+    global angleInt
     angleInt = 0
     servo.ServoAngle(0)
     
@@ -85,24 +96,37 @@ def demarrerSysteme():
                 angleInt = angleInt - 2
                 servo.ServoAngle(angleInt)
         
-        if buttonJoystick.value() == 0:
+        if buttonJoystick.value() == 0 and typeCapture == "distance":
             time.sleep(0.5)
             distance = lectureDistance()
-            afficherMesureLCD(distance)
+            afficherMesureLCD("distance", distance)
+            time.sleep(0.5)
+        
+        if buttonJoystick.value() == 0 and typeCapture == "angle":
+            time.sleep(0.5)
+            afficherMesureLCD("angle", angleInt)
             time.sleep(0.5)
             
         utime.sleep(0.1)
   
 	 
 def arreterSysteme():
-    global terminateThread, distance
+    global terminateThread, distance, angleInt, typeCapture
     terminateThread = True
+    valeurRetournee = 0
     
-    distance = lectureDistance()
-    
-    ecranLCD.clear()
-    ecranLCD.putstr("MESURE PRISE:\n" + str(distance) + "cm")
-    
+    if typeCapture == "distance":
+        distance = lectureDistance()
+        ecranLCD.clear()
+        ecranLCD.putstr("MESURE PRISE:\n" + str(distance) + "cm")
+        valeurRetournee = distance
+    elif typeCapture == "angle":
+        ecranLCD.clear()
+        ecranLCD.putstr("MESURE PRISE:\n" + str(angleInt) + " degrees")
+        valeurRetournee = angleInt
+        
+    typeCapture = ""
+        
     ledRouge.off()
     ledVert.off()
     
@@ -111,9 +135,8 @@ def arreterSysteme():
         ledVert.toggle()
     
     ecranLCD.clear()
-    
-    
-    print(distance)
+
+    print(valeurRetournee)
     
 def afficherErreur():
     global terminateThread
@@ -140,10 +163,15 @@ def afficherErreur():
 while True:
     rep = sys.stdin.readline().strip()
     
-    if rep.lower() == "demarrer":
+    if rep.lower() == "demarrerdistance":
+        terminateThread = False
+        typeCapture = "distance"
+        _thread.start_new_thread(demarrerSysteme, ())
+    elif rep.lower() == "demarrerangle":
+        typeCapture = "angle"
         terminateThread = False
         _thread.start_new_thread(demarrerSysteme, ())
     elif rep.lower() == "arreter":
-        arreterSysteme()
+        arreterSysteme()    #Add a way to know if you do angle or distance, I'm thinking a string variable global
     elif rep.lower() == "descriptionvide":
         afficherErreur()

@@ -2,11 +2,12 @@ import sqlite3
 
 connexion = ""
 nomBD = "Tp-Synthese-DB.db"
-table_distances = "DISTANCES"
+table_mesures = "MESURES"
 cle_no = "noMesure"
 cle_date = "date"
 cle_description = "description"
-cle_distance = "distance"
+cle_mesure = "mesure"
+cle_typeMesure = "typeMesure"
 
 def connexionDB():
     global connexion
@@ -42,25 +43,26 @@ def verifierExisteTable(table):
             existe = False
     
     except sqlite3.Error as error:
-        print("[ERREUR] Vérification de l'existance de la table 'DISTANCES' échouée")
+        print("[ERREUR] Vérification de l'existance de la table 'MESURES' échouée", error)
         
     return existe
         
         
 def creationBaseDeDonnées():  
         
-        tableDistances = """CREATE TABLE "DISTANCES" (
-                            "noMesure"	INTEGER,
-                            "date"	TEXT NOT NULL,
-                            "description"	TEXT NOT NULL,
-                            "distance"	INTEGER NOT NULL,
-                            PRIMARY KEY("noMesure" AUTOINCREMENT)
+        tableDistances = """CREATE TABLE "MESURES" (
+	                        "noMesure"	INTEGER,
+	                        "date"	TEXT NOT NULL,
+	                        "description"	TEXT NOT NULL,
+	                        "mesure"	INTEGER NOT NULL,
+	                        "typeMesure"	TEXT NOT NULL,
+	                        PRIMARY KEY("noMesure" AUTOINCREMENT)
                             );"""
                                                         
         connexionDB()
         
-        if verifierExisteTable(table_distances):
-            print("[INFO] La table 'DISTANCES' existe déjà")
+        if verifierExisteTable(table_mesures):
+            print("[INFO] La table 'MESURES' existe déjà")
         else:
             try:
                 connexion.execute(tableDistances)
@@ -71,23 +73,23 @@ def creationBaseDeDonnées():
         fermetureDB()
 
 
-def ajouterMesure(date, description, distance):
-    sql_insert = "INSERT INTO " + table_distances + " (" + cle_date + ", " + cle_description + ", " + cle_distance + ") VALUES (?, ?, ?);"
+def ajouterMesure(date, description, mesure, typeDeMesure):
+    sql_insert = "INSERT INTO " + table_mesures + " (" + cle_date + ", " + cle_description + ", " + cle_mesure + ", " + cle_typeMesure + ") VALUES (?, ?, ?, ?);"
     
     connexionDB()
     
     try:        
         cur_insert = connexion.cursor()
-        data_param = (date, description, distance)
+        data_param = (date, description, mesure, typeDeMesure)
         cur_insert.execute(sql_insert, data_param)
         
         connexion.commit()
-        print("[INFO] Insertion de données dans la table 'DISTANCES' réussite")
+        print("[INFO] Insertion de données dans la table 'MESURES' réussite")
         
         cur_insert.close()
         
     except:
-        print("[ERREUR] Insertion de données dans la table 'DISTANCES' échouée")
+        print("[ERREUR] Insertion de données dans la table 'MESURES' échouée")
     finally:
         fermetureDB()
         
