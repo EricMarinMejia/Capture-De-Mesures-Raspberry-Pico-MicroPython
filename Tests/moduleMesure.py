@@ -20,8 +20,8 @@ class Mesure:
     def afficherMesure(self):
         return str(self.dateHeureMesure) + "\n" + self.description + "\n" + self.dataMesure
     
-    def __eq__(self, other):
-        if not isinstance(other, Mesure):
+    def __eq__(self, objet2): 
+        if not isinstance(objet2, Mesure):
             return NotImplemented
 
-        return self.dateHeureMesure == other.dateHeureMesure
+        return self.dateHeureMesure == objet2.dateHeureMesure
