@@ -13,19 +13,20 @@ i2c_add = i2c.scan()[0]
 ledVert = Pin(13, Pin.OUT)
 ledRouge = Pin(16, Pin.OUT)
 
-#distance
+#Capteur Distances
 trigger = Pin(19, Pin.OUT)
 echo = Pin(18, Pin.IN)
 distance = 0
 velocite_son = 340
 
-#servomoteur
+#Servomoteur
 servo = Servo(15)
 adc = ADC(26)
 servo.ServoAngle(0)
 
 ecranLCD = I2cLcd(i2c, i2c_add, 2, 16)
 
+#Joystick
 xAxis = ADC(Pin(28))
 yAxis = ADC(Pin(27))
 buttonJoystick = Pin(26,Pin.IN, Pin.PULL_UP)
@@ -34,6 +35,7 @@ terminateThread = False
 typeCapture = ""
 
 def lectureDistance():
+    #Fonction qui calcule et retourne la distance détectée
 	trigger.value(1)
 	time.sleep_us(10)
 	trigger.value(0)
@@ -54,6 +56,7 @@ def lectureDistance():
 def afficherMesureLCD(typeMesure, valeur):
     ecranLCD.clear()
     
+    #Affichage différent selon le type de mesure
     if typeMesure == "distance":
         ecranLCD.putstr("Objet detecte a:\n" + str(valeur) + "cm")
     else:
@@ -66,10 +69,12 @@ def afficherMesureLCD(typeMesure, valeur):
 
 def demarrerSysteme():
     global terminateThread, distance, typeCapture
+    global angleInt
     
     ledVert.on()
     ledRouge.off()
     
+    #Affichage de démarrage. Indique le type de mesure
     if typeCapture == "distance":
         ecranLCD.putstr("DEMARRAGE\nDISTANCE")
     elif typeCapture == "angle":
@@ -78,30 +83,31 @@ def demarrerSysteme():
     ecranLCD.clear()
     ecranLCD.putstr("Appuyer pour\nafficher mesure")
     
-    global angleInt
     angleInt = 0
     servo.ServoAngle(0)
     
     while not terminateThread:
         xValue = xAxis.read_u16()
-
+        
         if xValue <= 32000:
-            #xStatus = "left"
+            #Inclinaison du joystick à gauche
             if angleInt + 2 <= 180:
                 angleInt = angleInt + 2
                 servo.ServoAngle(angleInt)
         elif xValue >= 34000:
-            #xStatus = "right"
+            #Inclinaison du joystick à droite
             if angleInt - 2 >= 0:
                 angleInt = angleInt - 2
                 servo.ServoAngle(angleInt)
         
+        #Si le joystick est appuyé et on capture la distance
         if buttonJoystick.value() == 0 and typeCapture == "distance":
             time.sleep(0.5)
             distance = lectureDistance()
             afficherMesureLCD("distance", distance)
             time.sleep(0.5)
         
+        #Si le joystick est appuyé et on capture l'angle
         if buttonJoystick.value() == 0 and typeCapture == "angle":
             time.sleep(0.5)
             afficherMesureLCD("angle", angleInt)
@@ -124,18 +130,19 @@ def arreterSysteme():
         ecranLCD.clear()
         ecranLCD.putstr("MESURE PRISE:\n" + str(angleInt) + " degrees")
         valeurRetournee = angleInt
-        
+    
     typeCapture = ""
         
     ledRouge.off()
     ledVert.off()
-    
+
     for i in range(5):
         time.sleep(1)
         ledVert.toggle()
     
     ecranLCD.clear()
 
+    #Retour vers l'hôte de la distance ou de l'angle
     print(valeurRetournee)
     
 def afficherErreur():
@@ -172,6 +179,6 @@ while True:
         terminateThread = False
         _thread.start_new_thread(demarrerSysteme, ())
     elif rep.lower() == "arreter":
-        arreterSysteme()    #Add a way to know if you do angle or distance, I'm thinking a string variable global
+        arreterSysteme()
     elif rep.lower() == "descriptionvide":
         afficherErreur()

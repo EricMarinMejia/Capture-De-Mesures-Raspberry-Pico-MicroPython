@@ -11,26 +11,27 @@ serialPort = serial.Serial("COM3")
 class Interface(tk.Tk):
     
     typeCapture = ""
-    
+
     def setCapture(self, typeCapture):
         self.typeCapture = typeCapture
     
     def demarrerSysteme(self, labelStatus, textBoxDescription):
-        labelStatus.config(text="ACTIVÉ", fg="green")
-        textBoxDescription.config(state="normal")
-        
-        if self.typeCapture == "distance":
-            serialPort.write(b"DEMARRERDISTANCE\n")
-        elif self.typeCapture == "angle":
-            serialPort.write(b"DEMARRERANGLE\n")
-        
+        #Si un type de capture est défini
+        if self.typeCapture != "":
+            labelStatus.config(text="ACTIVÉ", fg="green")
+            textBoxDescription.config(state="normal")
+            
+            if self.typeCapture == "distance":
+                serialPort.write(b"DEMARRERDISTANCE\n")
+            elif self.typeCapture == "angle":
+                serialPort.write(b"DEMARRERANGLE\n")
     
     def prendreMesure(self, labelStatus, textBoxDescription, listBoxMesures):
-        
         #Si une description est rentrée
         if textBoxDescription.get("1.0", "end-1c") != "":
             labelStatus.config(text="DÉSACTIVÉ", fg="red")
 
+            #Récuperer la description entrée
             description = textBoxDescription.get("1.0", "end-1c")
             textBoxDescription.delete('1.0', tk.END)
             textBoxDescription.config(state="disabled")
@@ -45,34 +46,36 @@ class Interface(tk.Tk):
                 self.creerMesure(donnees, listBoxMesures, description, "angle")
         else:
             labelStatus.config(text="DÉSACTIVÉ", fg="red")
-            text = textBoxDescription.get("1.0", "end-1c")
             textBoxDescription.delete('1.0', tk.END)
             textBoxDescription.config(state="disabled")
             serialPort.write(b"DESCRIPTIONVIDE\n")
-        
+            
     def creerMesure(self, mesure, listBoxMesures, description, typeDeMesure):
+        #Recupération du temps
+        #Création de la mesure
+        #Mise de l'objet mesure dans le listBox
         date = datetime.datetime.now()
         dateStr = date.strftime("%c")
         objetMesure = module.Mesure(dateStr, description, mesure, typeDeMesure)
         listBoxMesures.insert(tk.END, objetMesure)
         
+        #Envoyer l'objet à la base de données
         bd.connexionDB()
         
         if bd.verifierExisteTable("MESURES") == False:
             bd.creationBaseDeDonnées()
             
         bd.ajouterMesure(dateStr, description, mesure, typeDeMesure)
-        
         bd.fermetureDB()
         print("-----------------------------------------------------")
         
-    
     def __init__(self):
         super().__init__()
         self.title("TP4 Eric Marin")
         self.geometry("600x600")
         self.resizable(False, False)
         
+        #Frame et logo
         frame1 = ttk.Frame(self)
         frame1.pack(side=tk.TOP)
 
@@ -83,6 +86,7 @@ class Interface(tk.Tk):
         labelLogo.config(bg="orange")
         labelLogo.pack()
         
+        #Titres et listBox
         labelTitre = tk.Label(frame1, text="Logiciel de mesures", font=('Helvetica', 16))
         labelTitre.pack()
         
@@ -92,7 +96,7 @@ class Interface(tk.Tk):
         listBoxMesures = tk.Listbox(frame1, height=12, width=100)
         listBoxMesures.pack()
         
-        ######### ECRIRE MÉTHODE POUR COMMANDE POUR SETCAPTURE SOIT DISTANCE OU ANGLE
+        #Radio boutons
         labelChoix = tk.Label(frame1, text="Que voulez-vous capturer?", font=('Helvetica', 12))
         labelChoix.pack()
         
@@ -104,19 +108,17 @@ class Interface(tk.Tk):
         radioAngle = tk.Radiobutton(frame1, text = "Angle du moteur", variable = radioVar, value = 2, command=lambda: self.setCapture("angle"))
         radioAngle.pack()
         
-        radioDistance.select()
-        ################
-        
+        #Description
         labelDescription = tk.Label(frame1, text="Entrez une description:", font=('Helvetica', 12))
         labelDescription.pack(pady=(20,0))
         
         textBoxDescription = tk.Text(frame1, width=60, height=3, state="disabled")
         textBoxDescription.pack()
         
-        
         labelStatus = tk.Label(frame1, text="DÉSACTIVÉ", font=('Helvetica', 12))
         labelStatus.pack(pady=(20,0))
         
+        #Boutons démarrer / prendre mesure
         boutonDemarrer = tk.Button(frame2, text="Démarrer la capture", bg='#3CBA4C', command=lambda: self.demarrerSysteme(labelStatus, textBoxDescription))
         boutonDemarrer.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
         

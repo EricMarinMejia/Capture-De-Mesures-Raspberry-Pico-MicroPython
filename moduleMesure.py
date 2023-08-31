@@ -21,6 +21,7 @@ class Mesure:
         return str(self.dateHeureMesure) + "\n" + self.description + "\n" + self.dataMesure
     
     def __eq__(self, other):
+        #Compare la date/heure/seconde
         if not isinstance(other, Mesure):
             return NotImplemented
 

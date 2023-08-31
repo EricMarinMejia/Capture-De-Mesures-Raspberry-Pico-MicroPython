@@ -12,7 +12,6 @@ class Tester(unittest.TestCase):
         objet2 = mod.Mesure(dateStr, "test1", 30, "distance")
         
         self.assertTrue(objet1.dateHeureMesure == objet2.dateHeureMesure)
-        #self.assertEqual(objet1, objet2)
     
     def test_inegalite(self):
         date = datetime.datetime.now()
