@@ -1,4 +1,4 @@
-# TP-Synthese-Capture-De-Mesures-Raspebrry-Pico-MicroPython
+# TP-Synthese-Capture-De-Mesures-Raspberry-Pico-MicroPython
 Logiciel qui permet de capturer et de stocker dans une base de données l'angle pointé ou la distance capturée par le capteur de distance.
 Projet fait avec un Rapsberry Pico dans le cadre du cours Objets Connectés (420 4B5 MO).
 
